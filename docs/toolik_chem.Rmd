@@ -1,0 +1,60 @@
+---
+title: "Toolik biogeochemistry analysis"
+author: "Erika"
+date: "2022-08-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+## Read in data
+```{r}
+toolik_biochem <- read_csv(here("data", "2011_Kling_Akchem.csv"),
+                           na = c(".")) %>%
+  clean_names()
+```
+
+## Take data subset
+```{r}
+inlet_biochem <- toolik_biochem %>%
+  filter(site == "Toolik Inlet") %>%
+  select(p_h, doc_u_m, tdn_u_m)
+
+#inlet_biochem_convert_na <- inlet_biochem %>%
+  #mutate(across(names(inlet_biochem), na_if, ".")) %>%
+  #mutate(p_h = as.numeric(p_h),
+         #doc_u_m = as.numeric(doc_u_m),
+         #tdn_u_m = as.numeric(tdn_u_m))
+```
+
+## Take mean of each remaining column
+```{r}
+# method 1
+inlet_means1 <- vector(mode = "numeric", length = ncol(inlet_biochem))
+
+for (i in seq_along(inlet_biochem)) {
+  mean_val <- mean(inlet_biochem[[i]], na.rm = TRUE)
+  inlet_means1[i] <- mean_val
+}
+
+inlet_means1
+
+# method 2
+inlet_means2 <- apply(inlet_biochem, 2, mean, na.rm = TRUE)
+
+inlet_means2
+
+# method 3
+inlet_means3 <- inlet_biochem %>%
+  summarize(across(where(is.numeric), mean, na.rm = TRUE))
+
+# method 4
+inlet_means4 <- map(.x = inlet_biochem, .f = mean, na.rm = TRUE)
+```
+
